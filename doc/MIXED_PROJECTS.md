@@ -75,41 +75,22 @@ version in mixed Clojure/Java projects.
 
 ## Interleaving Compilation Steps
 
-In some cases it may be necessary to alternate between compiling
-different languagess. For instance, systems that generate and
-reference Java sources may also provide Clojure code for the generated
-sources to use.
+In some cases it may be necessary to alternate between compiling different languagess.  For instance, systems that generate and reference Java sources may also provide Clojure code for the generated sources to use.
 
-Any Clojure code referenced by Java sources must be
-[AOT compiled](http://clojure.org/compilation) to make it available to
-the Java compiler. Similarly, the Java classes produced by `javac`
-must be available for Clojure code that dependends on it. This results
-in steps of `compile` `javac` `compile`, whereas the default task
-order is simply `javac` `compile`.
+Any Clojure code referenced by Java sources must be [AOT compiled](http://clojure.org/compilation) to make it available to the Java compiler. Similarly, the Java classes produced by `javac` must be available for Clojure code that dependends on it. This results in steps of `compile` `javac` `compile`, whereas the default task order is simply `javac` `compile`.  
 
-This sequence can be accompished by executing lein with different
-profiles. A profile can be built to perform the initial steps, while
-another profile continues to the final compilation stage. For
-instance, the following is an example of a profile called `:precomp`
-that AOT compiles the `ex.ast` namespace. The sources for this first
-step are kept in separate directory from the source directory used by
-the default profile:
+This sequence can be accompished by executing lein with different profiles. A profile can be built to perform the initial steps, while another profile continues to the final compilation stage.  For instance, the following is an example of a profile called `:precomp` that AOT compiles the `ex.ast` namespace. The sources for this first step are kept in separate directory from the source directory used by the default profile:
 
 ```clojure
   :profiles { :precomp { :source-paths ["src/pre/clojure"]
                          :aot [ex.ast] } }
 ```
 
-This profile can then be compiled using: `lein with-profile precomp compile`
-n
-Once this is done, the default profile can be used in a separate
-invocation of `lein` to perform the `javac` and `compile` steps.
+This profile can then be executed using: `lein with-profile precomp compile`
 
-The following is a complete example of a project that interleaves
-Clojure and Java compiling. The entire project uses Clojure, except
-for generated Java sources. In this case, the project uses the Beaver
-parser generator to create Java source code which calls code written
-in Clojure. The resulting parser is then referenced by Clojure code.
+Once this is done, the default profile can be used in a separate invocation of `lein` to perform the `javac` and `compile` steps. 
+
+The following is a complete example of a project that interleaves Clojure and Java compiling.  The entire project uses Clojure, except for generated Java sources. In this case, the project uses the Beaver parser generator to create Java source code which calls code written in Clojure.  The resulting parser is then referenced by Clojure code.
 
 ```clojure
 (defproject example/parser "0.0.1"
@@ -127,29 +108,13 @@ in Clojure. The resulting parser is then referenced by Clojure code.
                          :aot [parser.ast] } })
  ```
 
-The `:prep-tasks` attribute in the profile adds the source-code
-generation step into the sequence of operations to be performed when
-compiling (though this could have been added to the default profile
-instead - so long as it occurs before the javac). The `:beaver` task
-uses `:grammar-src-dir` to find the grammar files and creates the Java
-sources in the directory specified by `:grammar-dest-dir` (this is
-placed in "target/" to ensure that it gets removed during a clean). It
-should be apparent that the generated code is going to use classes
-and/or protocols found in the `parser.ast` namespace, which is why
-this namespace is AOT compiled. Also, note that the target of the
-`beaver` step matches the sources of the default profile for the
-subsequent `javac` step.
+The `:prep-tasks` attribute in the profile adds the source-code generation step into the sequence of operations to be performed when compiling (though this could have been added to the default profile instead - so long as it occurs before the javac). The `:beaver` task uses `:grammar-src-dir` to find the grammar files and creates the Java sources in the directory specified by `:grammar-dest-dir` (this is placed in "target/" to ensure that it gets removed during a clean). It should be apparent that the generated code is going to use classes and/or protocols found in the `parser.ast` namespace, which is why this namespace is AOT compiled.  Also, note that the target of the `beaver` step matches the sources of the default profile for the subsequent `javac` step.
 
-Running the `precomp` profile generates the .java sources and compiles
-the `parser.ast` namespace:
-
+Running the `precomp` profile generates the .java sources and compiles the `parser.ast` namespace:
 ```bash
-$ lein with-profile precomp compile
+lein with-profile precomp compile
 ```
-
-The project is now ready to complete compilation normally. For
-instance, invoking `lein test` or `lein uberjar` will cause `javac`
-and `compile` to run first.
+The project is now ready to complete compilation normally. For instance, invoking `lein test` or `lein uberjar` will cause `javac` and `compile` to run first.
 
 ## Other Languages
 
